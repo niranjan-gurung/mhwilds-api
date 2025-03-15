@@ -1,6 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask
 from flask_restful import Resource, Api, reqparse, marshal_with, fields, abort
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import Mapped, mapped_column
 
 import os
 from dotenv import load_dotenv
@@ -24,7 +25,7 @@ schema (armour):
     - type (str): head, chest, arms etc.
     - rank: (str) low or high
     - rarity (int): 1-8
-    - deco slots (list[slots])
+    - deco slots (list[slots]): ex. list[{'rank': 3, 'rank': 1, 'rank': 1}]
     - skills (list[skills])
 
     ** TODO later on: **
@@ -33,12 +34,13 @@ schema (armour):
     - resistances
 """
 class ArmourModel(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String(50), unique=True, nullable=False)
-  slug = db.Column(db.String(50), unique=True, nullable=False)
-  type = db.Column(db.String(6), unique=False, nullable=False)
-  rank = db.Column(db.String(4), unique=False, nullable=False)
-  rarity = db.Column(db.Integer, unique=False, nullable=False)
+  id: Mapped[int] = mapped_column(primary_key=True)
+  name: Mapped[str] = mapped_column(unique=True, nullable=False)
+  slug: Mapped[str] = mapped_column(unique=True, nullable=False)
+  type: Mapped[str] = mapped_column(unique=False, nullable=False)
+  rank: Mapped[str] = mapped_column(unique=False, nullable=False)
+  rarity: Mapped[int] = mapped_column(unique=False, nullable=False)
+  # slots = db.relationship('SlotModel')
 
   def __repr__(self):
     return f'Armour id: {self.id}\
@@ -47,6 +49,14 @@ class ArmourModel(db.Model):
             Armour type: {self.type}\
             Armour rank: {self.rank}\
             Armour rarity: {self.rarity}'
+
+# class SlotModel(db.model):
+#   id = db.Column(db.Integer, primary_key=True)
+#   rank = db.Column(db.Integer)
+
+#   def __repr__(self):
+#     return f'Slot id: {self.id}\
+#             Slot rank: {self.rank}'
 
 """create armour_model table in postgres (once)"""
 # with app.app_context():
@@ -73,13 +83,19 @@ class Armours(Resource):
   @marshal_with(armour_fields)
   def get(self, id=None, slug=None):
     if id:
-      armour = ArmourModel.query.filter_by(id=id).first()
+      armour = db.session \
+        .scalar(db.select(ArmourModel) \
+        .filter_by(id=id))
     elif slug:
-      armour = ArmourModel.query.filter_by(slug=slug).first()
+      armour = db.session \
+        .scalar(db.select(ArmourModel) \
+        .filter_by(slug=slug))
     else:
-      all_armours = ArmourModel.query.all()
+      all_armours = db.session \
+        .scalars(db.select(ArmourModel)) \
+        .all()
       return all_armours
-
+    
     if not armour:
       abort(404, "Armour id not found")
     return armour
@@ -94,25 +110,52 @@ class Armours(Resource):
       rank=args['rank'], 
       rarity=args['rarity']
     )
+    
     db.session.add(armour)
     db.session.commit()
-    all_armours = ArmourModel.query.all()
-    return all_armours, 201
+    
+    result = db.session \
+      .scalars(db.select(ArmourModel)) \
+      .all()
+    return result, 201
   
   @marshal_with(armour_fields)
   def patch(self, id):
     args = armour_args.parse_args()
     if id:
-      armour = ArmourModel.query.filter_by(id=id).first()
+      armour = db.session \
+        .scalar(db.select(ArmourModel) \
+        .filter_by(id=id))
+
       if not armour:
         abort(404, "Armour id not found")
+
       armour.name = args['name']
       armour.slug = args['slug']
       armour.type = args['type']
       armour.rank = args['rank']
       armour.rarity = args['rarity']
+
       db.session.commit()
       return armour
+  
+  @marshal_with(armour_fields)
+  def delete(self, id):
+    if id:
+      armour = db.session \
+        .scalar(db.select(ArmourModel) \
+        .filter_by(id=id))
+
+      if not armour:
+        abort(404, "Armour id not found")
+
+      db.session.delete(armour)
+      db.session.commit()
+
+      result = db.session \
+        .scalars(db.select(ArmourModel)) \
+        .all()
+      return result, 204
 
 api.add_resource(Armours, 
                  '/api/armours/', 
@@ -122,7 +165,6 @@ api.add_resource(Armours,
 @app.route('/')
 def hello():
   return {"hello": "world"}
-  # return render_template('index.html')
 
 if __name__ == '__main__':
   app.run(debug=True)
