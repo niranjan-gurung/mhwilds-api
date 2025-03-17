@@ -1,17 +1,17 @@
 from flask import Flask
 from flask_restful import Resource, Api, reqparse, marshal_with, fields, abort
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DB_URI = os.getenv('DB_URI')
+DATABASE_URI = os.getenv('DB_URI')
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 db = SQLAlchemy(app)
 api = Api(app)
 
@@ -35,32 +35,29 @@ schema (armour):
 """
 class ArmourModel(db.Model):
   id: Mapped[int] = mapped_column(primary_key=True)
-  name: Mapped[str] = mapped_column(unique=True, nullable=False)
-  slug: Mapped[str] = mapped_column(unique=True, nullable=False)
+  name: Mapped[str] = mapped_column(unique=False, nullable=False)
+  slug: Mapped[str] = mapped_column(unique=False, nullable=False)
   type: Mapped[str] = mapped_column(unique=False, nullable=False)
   rank: Mapped[str] = mapped_column(unique=False, nullable=False)
   rarity: Mapped[int] = mapped_column(unique=False, nullable=False)
-  # slots = db.relationship('SlotModel')
+  slots: Mapped['SlotModel'] = relationship('SlotModel', 
+                                            cascade='all, delete-orphan', 
+                                            back_populates='armour')
 
   def __repr__(self):
-    return f'Armour id: {self.id}\
-            Armour name: {self.name}\
-            Armour slug: {self.slug}\
-            Armour type: {self.type}\
-            Armour rank: {self.rank}\
-            Armour rarity: {self.rarity}'
+    return '{}-{}-{}-{}-{}'\
+      .format(self.name, self.slug, self.type, self.rank, self.rarity)
 
-# class SlotModel(db.model):
-#   id = db.Column(db.Integer, primary_key=True)
-#   rank = db.Column(db.Integer)
+class SlotModel(db.Model):
+  id: Mapped[int] = mapped_column(primary_key=True)
+  level: Mapped[int] = mapped_column(nullable=True)
+  armour_id: Mapped[int] = mapped_column(db.ForeignKey('armour_model.id', ondelete='CASCADE'))
+  armour: Mapped['ArmourModel'] = relationship('ArmourModel', 
+                                               back_populates='slots', 
+                                               foreign_keys=[armour_id])
 
-#   def __repr__(self):
-#     return f'Slot id: {self.id}\
-#             Slot rank: {self.rank}'
-
-"""create armour_model table in postgres (once)"""
-# with app.app_context():
-#   db.create_all()
+  def __repr__(self):
+    return '{}-{}'.format(self.id, self.rank)
 
 armour_args = reqparse.RequestParser()
 armour_args.add_argument('name', type=str, required=True, help="Armour name can't be blank")
@@ -94,6 +91,11 @@ class Armours(Resource):
       all_armours = db.session \
         .scalars(db.select(ArmourModel)) \
         .all()
+      # all_armours = db.session.execute(db.select(ArmourModel, SlotModel).join(SlotModel) \
+      #                                  .filter(ArmourModel.id == SlotModel.armour_id))
+      # all_armours = db.session.query(ArmourModel, SlotModel).join(SlotModel) \
+      #   .filter(ArmourModel.id == SlotModel.armour_id).all()
+      
       return all_armours
     
     if not armour:
