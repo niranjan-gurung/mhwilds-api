@@ -1,18 +1,21 @@
 from flask import Flask
 from flask_restful import Resource, Api, reqparse, marshal_with, fields, abort
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
+from flask_marshmallow import Marshmallow
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
+from marshmallow_sqlalchemy.fields import Related, Nested
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-import os
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
-DATABASE_URI = os.getenv('DB_URI')
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI')
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 api = Api(app)
 
 """
@@ -57,7 +60,25 @@ class SlotModel(db.Model):
                                                foreign_keys=[armour_id])
 
   def __repr__(self):
-    return '{}-{}'.format(self.id, self.rank)
+    return '{}-{}'.format(self.id, self.level)
+
+class SlotSchema(SQLAlchemyAutoSchema):
+  class Meta:
+    model = SlotModel
+    include_fk = True
+  
+class ArmourSchema(SQLAlchemyAutoSchema):
+  class Meta:
+    model = ArmourModel
+    include_relationships = True
+
+  id = auto_field()
+  name = auto_field()
+  slug = auto_field()
+  type = auto_field()
+  rank = auto_field()
+  slots = Nested(SlotSchema)
+  #slots = Related(['id', 'level'])
 
 armour_args = reqparse.RequestParser()
 armour_args.add_argument('name', type=str, required=True, help="Armour name can't be blank")
@@ -66,19 +87,27 @@ armour_args.add_argument('type', type=str, required=True, help="Armour type can'
 armour_args.add_argument('rank', type=str, required=True, help="Armour rank can't be blank")
 armour_args.add_argument('rarity', type=int, required=True, help="Armour rarity can't be blank")
 
+slot_fields = {
+  'id': fields.Integer,
+  'level': fields.Integer,
+  'armour_id': fields.Integer
+}
+
 armour_fields = {
   'id': fields.Integer,
   'name': fields.String,
   'slug': fields.String,
   'type': fields.String,
   'rank': fields.String,
-  'rarity': fields.Integer
+  'rarity': fields.Integer,
+  'slots': fields.List(fields.Nested(slot_fields))
 }
 
 class Armours(Resource):
   """get all armours OR single armour piece by id OR slug name"""
   @marshal_with(armour_fields)
   def get(self, id=None, slug=None):
+    armour_schema = ArmourSchema()
     if id:
       armour = db.session \
         .scalar(db.select(ArmourModel) \
@@ -91,16 +120,12 @@ class Armours(Resource):
       all_armours = db.session \
         .scalars(db.select(ArmourModel)) \
         .all()
-      # all_armours = db.session.execute(db.select(ArmourModel, SlotModel).join(SlotModel) \
-      #                                  .filter(ArmourModel.id == SlotModel.armour_id))
-      # all_armours = db.session.query(ArmourModel, SlotModel).join(SlotModel) \
-      #   .filter(ArmourModel.id == SlotModel.armour_id).all()
-      
-      return all_armours
+      armour_schema = ArmourSchema(many=True)
+      return armour_schema.dump(all_armours)
     
     if not armour:
       abort(404, "Armour id not found")
-    return armour
+    return armour_schema.dump(armour)
     
   @marshal_with(armour_fields)
   def post(self):
