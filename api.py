@@ -3,7 +3,7 @@ from flask_restful import Resource, Api, reqparse, marshal_with, fields, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from marshmallow_sqlalchemy.fields import Related, Nested
+from marshmallow_sqlalchemy.fields import RelatedList, Nested
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotenv import load_dotenv
@@ -43,9 +43,11 @@ class ArmourModel(db.Model):
   type: Mapped[str] = mapped_column(unique=False, nullable=False)
   rank: Mapped[str] = mapped_column(unique=False, nullable=False)
   rarity: Mapped[int] = mapped_column(unique=False, nullable=False)
-  slots: Mapped['SlotModel'] = relationship('SlotModel', 
-                                            cascade='all, delete-orphan', 
-                                            back_populates='armour')
+  slots: Mapped[list['SlotModel']] = relationship(cascade='all, delete-orphan', 
+                                                  back_populates='armour')
+  
+  """TODO:"""
+  # skills: Mapped[list['SkillsModel']]
 
   def __repr__(self):
     return '{}-{}-{}-{}-{}'\
@@ -54,31 +56,50 @@ class ArmourModel(db.Model):
 class SlotModel(db.Model):
   id: Mapped[int] = mapped_column(primary_key=True)
   level: Mapped[int] = mapped_column(nullable=True)
-  armour_id: Mapped[int] = mapped_column(db.ForeignKey('armour_model.id', ondelete='CASCADE'))
-  armour: Mapped['ArmourModel'] = relationship('ArmourModel', 
-                                               back_populates='slots', 
+  armour_id: Mapped[int] = mapped_column(db.ForeignKey('armour_model.id', 
+                                         ondelete='CASCADE'))
+  armour: Mapped['ArmourModel'] = relationship(back_populates='slots', 
                                                foreign_keys=[armour_id])
 
   def __repr__(self):
     return '{}-{}'.format(self.id, self.level)
+  
+# class SkillsModel(db.Model):
+#   id: Mapped[int] = mapped_column(primary_key=True)
+#   name: Mapped[str] = mapped_column(unique=True, nullable=False)
+#   desc: Mapped[str] = mapped_column(nullable=False)
+#   level: Mapped[int] = mapped_column(nullable=True)
 
-class SlotSchema(SQLAlchemyAutoSchema):
-  class Meta:
-    model = SlotModel
-    include_fk = True
+#   def __repr__(self):
+#     return '{}'
+  
+# class SkillTypeModel(db.Model):
+#   id: Mapped[int] = mapped_column(primary_key=True)
+#   name: Mapped[str] = mapped_column(unique=True, nullable=False)
+#   desc: Mapped[str] = mapped_column(nullable=False)
+
+#   def __repr__(self):
+#     return '{}'
   
 class ArmourSchema(SQLAlchemyAutoSchema):
   class Meta:
     model = ArmourModel
     include_relationships = True
+    load_instance = True
 
   id = auto_field()
   name = auto_field()
   slug = auto_field()
   type = auto_field()
   rank = auto_field()
-  slots = Nested(SlotSchema)
-  #slots = Related(['id', 'level'])
+  rarity = auto_field()
+  slots = RelatedList(Nested('SlotSchema'))
+
+class SlotSchema(SQLAlchemyAutoSchema):
+  class Meta:
+    model = SlotModel
+    include_fk = True
+    load_instance = True
 
 armour_args = reqparse.RequestParser()
 armour_args.add_argument('name', type=str, required=True, help="Armour name can't be blank")
@@ -107,7 +128,7 @@ class Armours(Resource):
   """get all armours OR single armour piece by id OR slug name"""
   @marshal_with(armour_fields)
   def get(self, id=None, slug=None):
-    armour_schema = ArmourSchema()
+    schema = ArmourSchema()
     if id:
       armour = db.session \
         .scalar(db.select(ArmourModel) \
@@ -120,13 +141,13 @@ class Armours(Resource):
       all_armours = db.session \
         .scalars(db.select(ArmourModel)) \
         .all()
-      armour_schema = ArmourSchema(many=True)
-      return armour_schema.dump(all_armours)
+      schema = ArmourSchema(many=True)
+      return schema.dump(all_armours)
     
     if not armour:
       abort(404, "Armour id not found")
-    return armour_schema.dump(armour)
-    
+    return schema.dump(armour)
+  
   @marshal_with(armour_fields)
   def post(self):
     args = armour_args.parse_args()
