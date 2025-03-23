@@ -1,10 +1,12 @@
-from api import app, db, ArmourModel, SlotModel, SkillModel, SkillRankModel
+from ..api import create_app, db
+from ..api.models import ArmourModel, SlotModel, SkillModel, SkillRankModel
 
-with app.app_context():
-  # ar = ArmourModel(
-  #   name='Arkvulcan Mail \u03b2', 
-  #   slug='arkvulcan-mail-beta',         # slug name needs to be alpha/beta instead of unicode
-  #   type='chest', rank='high', rarity=8)
+with create_app().app_context():
+  # print('test from test_db.py')
+  ar = ArmourModel(
+    name='Arkvulcan Mail \u03b2', 
+    slug='arkvulcan-mail-beta',         # slug name needs to be alpha/beta instead of unicode
+    type='chest', rank='high', rarity=8)
 
   # slot1 = SlotModel(level=3, armour=ar)
   # slot2 = SlotModel(level=2, armour=ar)
@@ -32,7 +34,7 @@ with app.app_context():
   db.session.commit()
 
 # """create new table"""
-# with app.app_context():
+# with create_app().app_context():
 #   db.create_all()
 
 # alpha = \u03b1 
