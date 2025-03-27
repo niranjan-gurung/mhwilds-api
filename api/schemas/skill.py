@@ -1,27 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow_sqlalchemy.fields import RelatedList, Nested
-
-from .models import ArmourModel, SlotModel, SkillModel, SkillRankModel
-
-class ArmourSchema(SQLAlchemyAutoSchema):
-  class Meta:
-    model = ArmourModel
-    include_relationships = True
-    load_instance = True
-
-  id = auto_field()
-  name = auto_field()
-  slug = auto_field()
-  type = auto_field()
-  rank = auto_field()
-  rarity = auto_field()
-  slots = RelatedList(Nested('SlotSchema'))
-
-class SlotSchema(SQLAlchemyAutoSchema):
-  class Meta:
-    model = SlotModel
-    include_fk = True
-    load_instance = True
+from api.models.skill import SkillModel, SkillRankModel
 
 class SkillSchema(SQLAlchemyAutoSchema):
   class Meta:

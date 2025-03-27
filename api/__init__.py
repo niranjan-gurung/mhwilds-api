@@ -16,17 +16,8 @@ def create_app(config_class=Config):
   db.init_app(app)
   migrate.init_app(app, db)
 
-  from .controllers import armours, skills
-  api.add_resource(armours.Armours, 
-                   '/api/armours/', 
-                   '/api/armours/<int:id>', 
-                   '/api/armours/<string:slug>')
-  
-  api.add_resource(skills.Skills, '/api/skills/')
+  from api.routes import init_routes 
+  init_routes(api)
   api.init_app(app)
-
-  @app.route('/')
-  def hello():
-    return {"hello": "world"}
   
   return app

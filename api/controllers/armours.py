@@ -1,8 +1,9 @@
 from flask_restful import Resource, reqparse, marshal_with, abort
 
-from ..schema import ArmourModel, ArmourSchema
-from api import db
+from api.models.armour import ArmourModel
+from api.schemas.armour import ArmourSchema
 from ..resource_fields import armour_fields
+from api import db
 
 armour_args = reqparse.RequestParser()
 armour_args.add_argument('name', type=str, required=True, help="Armour name can't be blank")

@@ -1,8 +1,8 @@
 from flask_restful import Resource, reqparse, marshal_with
 
-from ..schema import SkillModel, SkillSchema
-from api import db
+from api.schemas.skill import SkillModel, SkillSchema
 from ..resource_fields import skills_fields
+from api import db
 
 skill_args = reqparse.RequestParser()
 
