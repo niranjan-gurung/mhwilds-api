@@ -6,16 +6,6 @@ slot_fields = {
   'armour_id': fields.Integer
 }
 
-armour_fields = {
-  'id': fields.Integer,
-  'name': fields.String,
-  'slug': fields.String,
-  'type': fields.String,
-  'rank': fields.String,
-  'rarity': fields.Integer,
-  'slots': fields.List(fields.Nested(slot_fields))
-}
-
 skill_rank_fields = {
   'id': fields.Integer,
   'level': fields.Integer,
@@ -29,4 +19,15 @@ skills_fields = {
   'type': fields.String,
   'desc': fields.String,
   'ranks': fields.List(fields.Nested(skill_rank_fields))
+}
+
+armour_fields = {
+  'id': fields.Integer,
+  'name': fields.String,
+  'slug': fields.String,
+  'type': fields.String,
+  'rank': fields.String,
+  'rarity': fields.Integer,
+  'slots': fields.List(fields.Nested(slot_fields)),
+  'skills': fields.List(fields.Nested(skill_rank_fields))
 }
