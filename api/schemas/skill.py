@@ -24,3 +24,4 @@ class SkillRankSchema(SQLAlchemyAutoSchema):
   level = auto_field()
   skill_id = auto_field()
   desc = auto_field()
+  # skill_name = auto_field(attribute='skill.name')

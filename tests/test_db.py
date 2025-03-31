@@ -18,15 +18,16 @@ with create_app().app_context():
         .scalar(db.select(SkillRankModel) \
         .filter_by(id=6))
   
+  print(hbs.skill.name)
   # ma = db.session \
   #       .scalar(db.select(ArmourModel) \
   #       .filter_by(id=4))
   # mas1 = db.session \
   #       .scalar(db.select(SkillRankModel) \
   #       .filter_by(id=6))   # wex lvl 1
-  hb.skills.append(hbs)
-  db.session.add(hb)
-  db.session.commit()
+  # hb.skills.append(hbs)
+  # db.session.add(hb)
+  # db.session.commit()
 
   # slot1 = SlotModel(level=3, armour=ar)
   # slot2 = SlotModel(level=2, armour=ar)

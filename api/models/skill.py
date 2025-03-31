@@ -24,10 +24,12 @@ class SkillRankModel(db.Model):
     foreign_keys=skill_id
   )
 
-  armour: Mapped['ArmourModel'] = relationship(
+  armour: Mapped[list['ArmourModel']] = relationship(
     secondary='armour_skills', 
     back_populates='skills'
   )
+
+  # skill_name: Mapped[str] = mapped_column()
   
   def __repr__(self):
     return '<Skill level {}>'.format(self.level)
