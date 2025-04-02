@@ -1,5 +1,5 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from marshmallow_sqlalchemy.fields import RelatedList, Nested
+from marshmallow_sqlalchemy.fields import Nested, fields
 from api.models.skill import SkillModel, SkillRankModel
 
 class SkillSchema(SQLAlchemyAutoSchema):
@@ -12,7 +12,7 @@ class SkillSchema(SQLAlchemyAutoSchema):
   name = auto_field()
   type = auto_field()
   desc = auto_field()
-  ranks = RelatedList(Nested('SkillRankSchema'))
+  ranks = Nested('SkillRankSchema', many=True)
 
 class SkillRankSchema(SQLAlchemyAutoSchema):
   class Meta:
@@ -24,4 +24,4 @@ class SkillRankSchema(SQLAlchemyAutoSchema):
   level = auto_field()
   skill_id = auto_field()
   desc = auto_field()
-  # skill_name = auto_field(attribute='skill.name')
+  skill_name = fields.String(attribute='skill.name')

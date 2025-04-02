@@ -8,4 +8,6 @@ def init_routes(api: Api):
                    '/api/armours/<int:id>', 
                    '/api/armours/<string:slug>')
     
-  api.add_resource(Skills, '/api/skills/')
+  api.add_resource(Skills, 
+                   '/api/skills/',
+                   '/api/skills/<int:id>')

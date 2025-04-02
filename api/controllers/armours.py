@@ -1,8 +1,6 @@
-from flask_restful import Resource, reqparse, marshal_with, abort
-
+from flask_restful import Resource, reqparse
 from api.models.armour import ArmourModel
 from api.schemas.armour import ArmourSchema
-from ..resource_fields import armour_fields
 from api import db
 
 armour_args = reqparse.RequestParser()
@@ -14,13 +12,10 @@ armour_args.add_argument('rarity', type=int, required=True, help="Armour rarity 
 
 class Armours(Resource):
   """get all armours OR single armour piece by id OR slug name"""
-  @marshal_with(armour_fields)
   def get(self, id=None, slug=None):
     schema = ArmourSchema()
     if id:
-      armour = db.session \
-        .scalar(db.select(ArmourModel) \
-        .filter_by(id=id))
+      armour = db.get_or_404(ArmourModel, id)
     elif slug:
       armour = db.session \
         .scalar(db.select(ArmourModel) \
@@ -31,12 +26,9 @@ class Armours(Resource):
         .all()
       schema = ArmourSchema(many=True)
       return schema.dump(all_armours)
-    
-    if not armour:
-      abort(404, "Armour id not found")
+
     return schema.dump(armour)
   
-  @marshal_with(armour_fields)
   def post(self):
     args = armour_args.parse_args()
     armour = ArmourModel(
@@ -55,41 +47,26 @@ class Armours(Resource):
       .all()
     return result, 201
   
-  @marshal_with(armour_fields)
   def patch(self, id):
     args = armour_args.parse_args()
-    if id:
-      armour = db.session \
-        .scalar(db.select(ArmourModel) \
-        .filter_by(id=id))
+    armour = db.get_or_404(ArmourModel, id)
 
-      if not armour:
-        abort(404, "Armour id not found")
+    armour.name = args['name']
+    armour.slug = args['slug']
+    armour.type = args['type']
+    armour.rank = args['rank']
+    armour.rarity = args['rarity']
 
-      armour.name = args['name']
-      armour.slug = args['slug']
-      armour.type = args['type']
-      armour.rank = args['rank']
-      armour.rarity = args['rarity']
-      armour.slots = args['slots']
-
-      db.session.commit()
-      return armour
+    db.session.commit()
+    return armour
   
-  @marshal_with(armour_fields)
   def delete(self, id):
-    if id:
-      armour = db.session \
-        .scalar(db.select(ArmourModel) \
-        .filter_by(id=id))
+    armour = db.get_or_404(ArmourModel, id)
 
-      if not armour:
-        abort(404, "Armour id not found")
+    db.session.delete(armour)
+    db.session.commit()
 
-      db.session.delete(armour)
-      db.session.commit()
-
-      result = db.session \
-        .scalars(db.select(ArmourModel)) \
-        .all()
-      return result, 204
+    result = db.session \
+      .scalars(db.select(ArmourModel)) \
+      .all()
+    return result, 204
