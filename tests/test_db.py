@@ -5,20 +5,39 @@ from api.models.skill import SkillModel
 
 with create_app().app_context():
   # print('test from test_db.py')
-  # ar = ArmourModel(
-  #   name='Arkvulcan Mail \u03b2', 
-  #   slug='arkvulcan-mail-beta',         # slug name needs to be alpha/beta instead of unicode
-  #   type='chest', rank='high', rarity=8)
+  ar = ArmourModel(
+    name='Arkvulcan Mail \u03b2', 
+    slug='arkvulcan-mail-beta',         # slug name needs to be alpha/beta instead of unicode
+    type='chest', rank='high', rarity=8)
   
+  slot1 = SlotModel(level=3, armour=ar)
+  slot2 = SlotModel(level=2, armour=ar)
+
+  db.session.add(ar)
+  db.session.add_all([slot1, slot2])
+
+  sk = SkillModel(
+    name='Convert Element',
+    type='Armour',
+    desc='After taking elemental damage, temporarily grants you dragon element effects. (Cooldown after effect ends.)'
+  )
+
+  skr1 = SkillRankModel(level=1, desc='While active, deals extra dragon damage after dealing enough elemental damage. Slightly increases dragon attack.', skill=sk)
+  skr2 = SkillRankModel(level=2, desc='Increases additional dragon damage and increases dragon attack.', skill=sk)
+  db.session.add(sk)
+  db.session.add_all([skr1, skr2])
+
+  db.session.commit()
+
   # head
-  hb = db.session \
-        .scalar(db.select(ArmourModel) \
-        .filter_by(id=4))
-  hbs = db.session \
-        .scalar(db.select(SkillRankModel) \
-        .filter_by(id=6))
+  # hb = db.session \
+  #       .scalar(db.select(ArmourModel) \
+  #       .filter_by(id=4))
+  # hbs = db.session \
+  #       .scalar(db.select(SkillRankModel) \
+  #       .filter_by(id=6))
   
-  print(hbs.skill.name)
+  # print(hbs.skill.name)
   # ma = db.session \
   #       .scalar(db.select(ArmourModel) \
   #       .filter_by(id=4))
