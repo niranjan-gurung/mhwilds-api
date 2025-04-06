@@ -4,30 +4,51 @@ from api.models.slot import SlotModel
 from api.models.skill import SkillModel
 
 with create_app().app_context():
-  # print('test from test_db.py')
-  ar = ArmourModel(
-    name='Arkvulcan Mail \u03b2', 
-    slug='arkvulcan-mail-beta',         # slug name needs to be alpha/beta instead of unicode
-    type='chest', rank='high', rarity=8)
+  # sk1 = SkillModel(
+  #   name='Elemental Absorption',
+  #   type='Armour',
+  #   desc='After taking elemental damage, temporarily grants you element effects. (Cooldown after effect ends)'
+  # )
+  # sk2 = SkillModel(
+  #   name='Convert Element',
+  #   type='Armour',
+  #   desc='After taking elemental damage, temporarily grants you dragon element effects. (Cooldown after effect ends.)'
+  # )
+
+  # skr1 = SkillRankModel(level=1, desc='While active, slightly increases elemental attack, and resistance to element taken at activation by 4.', skill=sk1)
+  # skr2 = SkillRankModel(level=2, desc='While active, moderately increases elemental attack, and resistance to element taken at activation by 6.', skill=sk1)
+  # skr3 = SkillRankModel(level=3, desc='While active, increases elemental attack, and resistance to element taken at activation by 8.', skill=sk1)
   
-  slot1 = SlotModel(level=3, armour=ar)
-  slot2 = SlotModel(level=2, armour=ar)
+  # skr4 = SkillRankModel(level=1, desc='While active, deals extra dragon damage after dealing enough elemental damage. Slightly increases dragon attack.', skill=sk2)
+  # skr5 = SkillRankModel(level=2, desc='Increases additional dragon damage and increases dragon attack.', skill=sk2)
+  # skr6 = SkillRankModel(level=3, desc='Further increases additional dragon damage and greatly increases dragon attack.', skill=sk2)
+  
+  # db.session.add_all([sk1, sk2])
+  # db.session.add_all([skr1, skr2, skr3, skr4, skr5, skr6])
+  # db.session.commit()
+  
+  ar = ArmourModel(
+    name='Arkvulcan Helm \u03b1', 
+    slug='arkvulcan-mail-alpha',         # slug name needs to be alpha/beta instead of unicode
+    type='head', rank='high', rarity=8)
+  
+  #slot1 = SlotModel(level=3, armour=ar)
+  #slot2 = SlotModel(level=2, armour=ar)
 
+  sk1 = db.session \
+        .scalar(db.select(SkillRankModel) \
+        .filter_by(id=2))
+  
+  sk2 = db.session \
+        .scalar(db.select(SkillRankModel) \
+        .filter_by(id=4))
+
+  ar.skills.append(sk1)
+  ar.skills.append(sk2)
   db.session.add(ar)
-  db.session.add_all([slot1, slot2])
-
-  sk = SkillModel(
-    name='Convert Element',
-    type='Armour',
-    desc='After taking elemental damage, temporarily grants you dragon element effects. (Cooldown after effect ends.)'
-  )
-
-  skr1 = SkillRankModel(level=1, desc='While active, deals extra dragon damage after dealing enough elemental damage. Slightly increases dragon attack.', skill=sk)
-  skr2 = SkillRankModel(level=2, desc='Increases additional dragon damage and increases dragon attack.', skill=sk)
-  db.session.add(sk)
-  db.session.add_all([skr1, skr2])
-
   db.session.commit()
+
+  #db.session.add_all([slot1, slot2])
 
   # head
   # hb = db.session \

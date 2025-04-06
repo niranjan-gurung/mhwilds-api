@@ -1,21 +1,23 @@
 services:
   api:
-    image: mhwilds-api
+    image: nimgurung/mhwilds-api/1.0
     build: .
     ports:
       - 5000:5000
     volumes:
       - .:/api
     environment:
+      SQLALCHEMY_DATABASE_URI_DEV: ${DB_URL}
       FLASK_DEBUG: 1
-    command: flask run -h 0.0.0.0
+    depends_on:
+      - flask_db
 
   flask_db:
     image: postgres
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - 5432:5432
     volumes:
