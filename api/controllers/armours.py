@@ -9,6 +9,7 @@ armour_args.add_argument('slug', type=str, required=True, help="Armour slug can'
 armour_args.add_argument('type', type=str, required=True, help="Armour type can't be blank")
 armour_args.add_argument('rank', type=str, required=True, help="Armour rank can't be blank")
 armour_args.add_argument('rarity', type=int, required=True, help="Armour rarity can't be blank")
+armour_args.add_argument('defense', type=int, required=True, help="Armour defense can't be blank")
 
 class Armours(Resource):
   """get all armours OR single armour piece by id OR slug name"""
@@ -36,7 +37,8 @@ class Armours(Resource):
       slug=args['slug'], 
       type=args['type'], 
       rank=args['rank'], 
-      rarity=args['rarity']
+      rarity=args['rarity'],
+      defense=args['defense']
     )
     
     db.session.add(armour)
@@ -56,6 +58,7 @@ class Armours(Resource):
     armour.type = args['type']
     armour.rank = args['rank']
     armour.rarity = args['rarity']
+    armour.defense = args['defense']
 
     db.session.commit()
     return armour
