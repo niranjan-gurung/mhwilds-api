@@ -1,15 +1,9 @@
-from flask_restful import Resource, reqparse
+from flask import request
+from flask_restful import Resource
 from api.models.armour import ArmourModel
 from api.schemas.armour import ArmourSchema
 from api import db
-
-armour_args = reqparse.RequestParser()
-armour_args.add_argument('name', type=str, required=True, help="Armour name can't be blank")
-armour_args.add_argument('slug', type=str, required=True, help="Armour slug can't be blank")
-armour_args.add_argument('type', type=str, required=True, help="Armour type can't be blank")
-armour_args.add_argument('rank', type=str, required=True, help="Armour rank can't be blank")
-armour_args.add_argument('rarity', type=int, required=True, help="Armour rarity can't be blank")
-armour_args.add_argument('defense', type=int, required=True, help="Armour defense can't be blank")
+from marshmallow import ValidationError
 
 class Armours(Resource):
   """get all armours OR single armour piece by id OR slug name"""
@@ -31,37 +25,30 @@ class Armours(Resource):
     return schema.dump(armour)
   
   def post(self):
-    args = armour_args.parse_args()
-    armour = ArmourModel(
-      name=args['name'], 
-      slug=args['slug'], 
-      type=args['type'], 
-      rank=args['rank'], 
-      rarity=args['rarity'],
-      defense=args['defense']
-    )
-    
-    db.session.add(armour)
-    db.session.commit()
-    
-    result = db.session \
-      .scalars(db.select(ArmourModel)) \
-      .all()
-    return result, 201
+    json = request.get_json()
+    try:
+      schema = ArmourSchema(session=db.session)
+      armour = schema.load(json)
+
+      db.session.add(armour)
+      db.session.commit()
+      
+      return schema.dump(armour), 201
+    except ValidationError as err:
+      return {'errors': err.messages}, 400
   
   def patch(self, id):
-    args = armour_args.parse_args()
+    json = request.get_json()
     armour = db.get_or_404(ArmourModel, id)
 
-    armour.name = args['name']
-    armour.slug = args['slug']
-    armour.type = args['type']
-    armour.rank = args['rank']
-    armour.rarity = args['rarity']
-    armour.defense = args['defense']
+    try:
+      schema = ArmourSchema(session=db.session, partial=True)
+      update = schema.load(json, instance=armour)
 
-    db.session.commit()
-    return armour
+      db.session.commit()
+      return schema.dump(update)
+    except ValidationError as err:
+      return {'errors': err.messages}, 422
   
   def delete(self, id):
     armour = db.get_or_404(ArmourModel, id)
