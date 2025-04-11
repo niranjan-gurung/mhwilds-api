@@ -40,7 +40,6 @@ class Armours(Resource):
   def patch(self, id):
     json = request.get_json()
     armour = db.get_or_404(ArmourModel, id)
-
     try:
       schema = ArmourSchema(session=db.session, partial=True)
       update = schema.load(json, instance=armour)
@@ -52,11 +51,12 @@ class Armours(Resource):
   
   def delete(self, id):
     armour = db.get_or_404(ArmourModel, id)
+    try:
+      schema = ArmourSchema(session=db.session)
+      db.session.delete(armour)
+      db.session.commit()
 
-    db.session.delete(armour)
-    db.session.commit()
-
-    result = db.session \
-      .scalars(db.select(ArmourModel)) \
-      .all()
-    return result, 204
+      return schema.dump(armour), 204
+    except ValidationError as err:
+      db.session.rollback()
+      return {'error': err.messages}, 400

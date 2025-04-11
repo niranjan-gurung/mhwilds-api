@@ -17,6 +17,7 @@ class ArmourModel(db.Model):
   defense: Mapped[int] = mapped_column(unique=False, nullable=False)
 
   resistances: Mapped['ResistancesModel'] = relationship(
+    cascade='all, delete-orphan',
     back_populates='armour'
   )
 
