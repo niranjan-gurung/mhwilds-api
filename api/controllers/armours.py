@@ -13,12 +13,16 @@ class Armours(Resource):
       armour = db.get_or_404(ArmourModel, id)
     elif slug:
       armour = db.session \
-        .scalar(db.select(ArmourModel) \
-        .filter_by(slug=slug))
+        .scalar(
+          db.select(ArmourModel)
+          .filter_by(slug=slug)
+        )
     else:
       all_armours = db.session \
-        .scalars(db.select(ArmourModel)) \
-        .all()
+        .scalars(
+          db.select(ArmourModel)
+          .order_by(ArmourModel.id)
+        ).all()
       schema = ArmourSchema(many=True)
       return schema.dump(all_armours)
 

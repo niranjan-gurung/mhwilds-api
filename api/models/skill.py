@@ -6,7 +6,8 @@ class SkillModel(db.Model):
   name: Mapped[str] = mapped_column(unique=True, nullable=False)
   type: Mapped[str] = mapped_column(nullable=False)   # armour / weapon
   desc: Mapped[str] = mapped_column(nullable=False)
-  ranks: Mapped[list['SkillRankModel']] = relationship(back_populates='skill')
+  ranks: Mapped[list['SkillRankModel']] = relationship(back_populates='skill', 
+                                                       order_by="SkillRankModel.id")
 
   def __repr__(self):
     return '<Skill {}>, <Skill ranks {}>'.format(self.name, self.ranks)
