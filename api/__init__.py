@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -19,5 +19,11 @@ def create_app(config_class=Config):
   from api.routes import init_routes 
   init_routes(api)
   api.init_app(app)
+
+  # @app.post('/seed')
+  # def seed():
+  #   if request.method == 'POST':
+  #     print('post method!!')
+  #     return request.data
   
   return app

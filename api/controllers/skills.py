@@ -1,6 +1,6 @@
 from flask import request
 from flask_restful import Resource
-from api.schemas.skill import SkillModel, SkillSchema
+from api.schemas.skill import SkillModel, SkillRankModel, SkillSchema
 from api import db
 from marshmallow import ValidationError
 
@@ -23,10 +23,18 @@ class Skills(Resource):
   def post(self):
     json = request.get_json()
     try:
+      ranks = json.pop('ranks', [])
       schema = SkillSchema(session=db.session)
       skill = schema.load(json)
 
       db.session.add(skill)
+      db.session.flush()
+
+      for rank in ranks:
+        rank['skill_id'] = skill.id
+        skill_rank = SkillRankModel(**rank)
+        db.session.add(skill_rank)
+      
       db.session.commit()
       
       return schema.dump(skill), 201
