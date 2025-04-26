@@ -22,23 +22,51 @@ class Skills(Resource):
   
   def post(self):
     json = request.get_json()
+    result = [], errors = []
     try:
-      ranks = json.pop('ranks', [])
-      schema = SkillSchema(session=db.session)
-      skill = schema.load(json)
+      if isinstance(json, list):
+        for skill_item in json:
+          try:
+            ranks = skill_item.pop('ranks', [])
+            schema = SkillSchema(session=db.session)
+            skill = schema.load(skill_item)
 
-      db.session.add(skill)
-      db.session.flush()
+            db.session.add(skill)
+            db.session.flush()
 
-      for rank in ranks:
-        rank['skill_id'] = skill.id
-        skill_rank = SkillRankModel(**rank)
-        db.session.add(skill_rank)
+            for rank in ranks:
+              rank['skill_id'] = skill.id
+              skill_rank = SkillRankModel(**rank)
+              db.session.add(skill_rank)
+            
+            result.append({'id': skill.id, 'name': skill.name})
+          except ValidationError as err:
+            errors.append({'item': skill, 'error': str(err)})
+
+        db.session.commit()
+      else:
+        # single skill object:
+        ranks = json.pop('ranks', [])
+        schema = SkillSchema(session=db.session)
+        skill = schema.load(json)
+
+        db.session.add(skill)
+        db.session.flush()
+
+        for rank in ranks:
+          rank['skill_id'] = skill.id
+          skill_rank = SkillRankModel(**rank)
+          db.session.add(skill_rank)
+        
+        db.session.commit()
+        result.append({'id': skill.id, 'name': skill.name})
+
+        if errors:
+          return {'success': result, 'errors': errors}, 207
+        return schema.dump(skill), 201
       
-      db.session.commit()
-      
-      return schema.dump(skill), 201
     except ValidationError as err:
+      db.session.rollback()
       return {'errors': err.messages}, 400
 
   def patch(self, id):
