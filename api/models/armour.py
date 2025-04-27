@@ -27,7 +27,7 @@ class ArmourModel(db.Model):
   )
 
   skills: Mapped[Optional[list['SkillRankModel']]] = relationship(
-    secondary=armour_skills, 
+    secondary='armour_skills', 
     back_populates='armour'
   )
 

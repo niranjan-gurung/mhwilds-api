@@ -20,10 +20,4 @@ def create_app(config_class=Config):
   init_routes(api)
   api.init_app(app)
 
-  # @app.post('/seed')
-  # def seed():
-  #   if request.method == 'POST':
-  #     print('post method!!')
-  #     return request.data
-  
   return app
