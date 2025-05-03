@@ -1,6 +1,8 @@
+from flask import request
 from flask_restful import Resource
 from api.schemas.charm import CharmModel, CharmSchema
 from api import db
+from marshmallow import ValidationError
 
 class Charms(Resource):
   def get(self, id=None):
@@ -18,4 +20,15 @@ class Charms(Resource):
     return schema.dump(charm)
   
   def post(self):
-    pass
+    json = request.get_json()
+    try:
+      schema = CharmSchema(session=db.session)
+      charm = schema.load(json)
+
+      db.session.add(charm)
+      db.session.commit()
+      return schema.dump(charm), 201
+
+    except ValidationError as err:
+      db.session.rollback()
+      return {'errors': err.messages}, 400
