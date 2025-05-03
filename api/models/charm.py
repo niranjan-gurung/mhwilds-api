@@ -17,6 +17,7 @@ class CharmModel(db.Model):
 class CharmRankModel(db.Model):
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str] = mapped_column(nullable=False)
+  desc: Mapped[str] = mapped_column(nullable=False)
   level: Mapped[int] = mapped_column(nullable=False)
   rarity: Mapped[int] = mapped_column(nullable=False)
 
@@ -24,7 +25,7 @@ class CharmRankModel(db.Model):
     db.ForeignKey('charm_model.id'), 
     nullable=False
   )
-  
+
   charm: Mapped['CharmModel'] = relationship(
     back_populates='ranks',
     foreign_keys=charm_id

@@ -135,21 +135,24 @@ with create_app().app_context():
   )
 
   chrmr1 = CharmRankModel(
-    name='Marathon Charm 1', 
+    name='Marathon Charm I', 
+    desc='A charm that grants the Marathon Runner skill.',
     level=1, 
     rarity=4,
     charm=charm,
     skills=[mathrn1])
   
   chrmr2 = CharmRankModel(
-    name='Marathon Charm 2', 
-    level=1, 
+    name='Marathon Charm II', 
+    desc='A charm that grants the Marathon Runner skill.',
+    level=2, 
     rarity=5,
     charm=charm,
     skills=[mathrn2])
   chrmr3 = CharmRankModel(
-    name='Marathon Charm 3', 
-    level=1, 
+    name='Marathon Charm III', 
+    desc='A charm that grants the Marathon Runner skill.',
+    level=3, 
     rarity=6,
     charm=charm,
     skills=[mathrn3])
