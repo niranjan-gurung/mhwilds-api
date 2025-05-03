@@ -2,7 +2,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api import db
 
 from api.models.charm import CharmRankModel 
-from api.models.charm_ranks import charm_skill_ranks 
+from api.models.decoration import DecorationModel 
+from api.models.charm_skill_ranks import charm_skill_ranks 
+from api.models.deco_skill_ranks import deco_skill_ranks 
 
 class SkillModel(db.Model):
   id: Mapped[int] = mapped_column(primary_key=True)
@@ -41,6 +43,11 @@ class SkillRankModel(db.Model):
 
   charms: Mapped[list['CharmRankModel']] = relationship(
     secondary='charm_skill_ranks',
+    back_populates='skills'
+  )
+
+  decorations: Mapped[list['DecorationModel']] = relationship(
+    secondary='deco_skill_ranks',
     back_populates='skills'
   )
 

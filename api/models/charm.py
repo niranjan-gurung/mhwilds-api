@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api import db
 
-from api.models.charm_ranks import charm_skill_ranks
+from api.models.charm_skill_ranks import charm_skill_ranks
 
 class CharmModel(db.Model):
   id: Mapped[int] = mapped_column(primary_key=True)

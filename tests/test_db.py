@@ -3,6 +3,7 @@ from api.models.armour import ArmourModel, SkillRankModel
 from api.models.slot import SlotModel
 from api.models.skill import SkillModel
 from api.models.charm import CharmModel, CharmRankModel
+from api.models.decoration import DecorationModel
 from api.models.resistances import ResistancesModel
 
 with create_app().app_context():
@@ -129,35 +130,22 @@ with create_app().app_context():
   mathrn3 = db.session \
         .scalar(db.select(SkillRankModel) \
         .filter_by(id=105))
+  
+  #divine blessing 1
+  db1 = db.session \
+        .scalar(db.select(SkillRankModel) \
+        .filter_by(id=37))
 
-  charm = CharmModel(
-    name='Marathon Charm'
+  deco = DecorationModel(
+    name='Protection Jewel 1',
+    desc='A decoration that grants the Divine Blessing skill.',
+    type='Armour',
+    rarity=3,
+    slot=1,
+    skills=[db1]
   )
 
-  chrmr1 = CharmRankModel(
-    name='Marathon Charm I', 
-    desc='A charm that grants the Marathon Runner skill.',
-    level=1, 
-    rarity=4,
-    charm=charm,
-    skills=[mathrn1])
-  
-  chrmr2 = CharmRankModel(
-    name='Marathon Charm II', 
-    desc='A charm that grants the Marathon Runner skill.',
-    level=2, 
-    rarity=5,
-    charm=charm,
-    skills=[mathrn2])
-  chrmr3 = CharmRankModel(
-    name='Marathon Charm III', 
-    desc='A charm that grants the Marathon Runner skill.',
-    level=3, 
-    rarity=6,
-    charm=charm,
-    skills=[mathrn3])
-
-  db.session.add(charm)
+  db.session.add(deco)
   db.session.commit()
  
   #db.session.add(ar3)
