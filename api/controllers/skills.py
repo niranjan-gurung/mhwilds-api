@@ -22,7 +22,8 @@ class Skills(Resource):
   
   def post(self):
     json = request.get_json()
-    result = [], errors = []
+    result = [] 
+    errors = []
     try:
       if isinstance(json, list):
         for skill_item in json:
@@ -41,7 +42,7 @@ class Skills(Resource):
             
             result.append({'id': skill.id, 'name': skill.name})
           except ValidationError as err:
-            errors.append({'item': skill, 'error': str(err)})
+            errors.append({'error': str(err)})
 
         db.session.commit()
       else:

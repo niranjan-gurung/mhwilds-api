@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Resource
 from api.models.armour import ArmourModel
 from api.models.slot import SlotModel
+from api.models.skill import SkillRankModel
 from api.schemas.armour import ArmourSchema
 from api import db
 from marshmallow import ValidationError
@@ -33,50 +34,59 @@ class Armours(Resource):
     json = request.get_json()
     result, errors = [], []
     try:
+      def process_armour_item(armour_item) -> dict:
+        # extract nested data that needs special handling
+        slots = armour_item.pop('slots', [])
+        skill_rank_ids = armour_item.pop('skills', [])
+        
+        # load the armour model without slots and skills
+        schema = ArmourSchema(session=db.session)
+        armour = schema.load(armour_item)
+        
+        db.session.add(armour)
+        db.session.flush()  # get ID for relationships without commiting
+        
+        # add slots
+        for slot in slots:
+          slot['armour_id'] = armour.id 
+          slot_model = SlotModel(**slot)
+          db.session.add(slot_model)
+        
+        # add skill associations
+        # if skill_rank_ids contains IDs directly
+        for skill_rank_id in skill_rank_ids:
+          if isinstance(skill_rank_id, int):
+            skill_rank = SkillRankModel.query.get(skill_rank_id)
+            if skill_rank:
+              armour.skills.append(skill_rank)
+          # if skill_rank_ids contains objects with ID field
+          elif isinstance(skill_rank_id, dict) and 'id' in skill_rank_id:
+            skill_rank = SkillRankModel.query.get(skill_rank_id['id'])
+            if skill_rank:
+              armour.skills.append(skill_rank)
+        db.session.commit()
+        return {'id': armour.id, 'name': armour.name}
+
       if isinstance(json, list):
         for armour_item in json:
           try:
-            slots = armour_item.pop('slots', [])
-            schema = ArmourSchema(session=db.session)
-            armour = schema.load(armour_item)
-            
-            db.session.add(armour)
-            db.session.flush()
-
-            for slot in slots:
-              slot['armour_id'] = armour.id 
-              slot_model = SlotModel(**slot)
-              db.session.add(slot_model)
-
-            result.append({'id': armour.id, 'name': armour.name})
+            result.append(process_armour_item(armour_item))
           except ValidationError as err:
-            errors.append({'item': armour, 'error': str(err)})
-
-        db.session.commit()
+            errors.append(process_armour_item(armour_item))
       else:
-        slots = json.pop('slots', [])
-        schema = ArmourSchema(session=db.session)
-        armour = schema.load(json)
+        result.append(process_armour_item(json))
 
-        db.session.add(armour)
-        db.session.flush()  
-
-        for slot in slots:
-          slot['armour_id'] = armour.id  
-          slot_model = SlotModel(**slot)
-          db.session.add(slot_model)
-
-        db.session.commit()  
-        result.append({'id': armour.id, 'name': armour.name})
-
-        if errors:
-          return {'success': result, 'errors': errors}, 207 
-        return schema.dump(armour), 201
-      
+      if errors:
+        return {'success': result, 'errors': errors}, 207
+      return {'success': result}, 201
+    
     except ValidationError as err:
       db.session.rollback()
       return {'errors': err.messages}, 400
-  
+    except Exception as e:
+      db.session.rollback()
+      return {'error': str(e)}, 500
+    
   def patch(self, id):
     json = request.get_json()
     armour = db.get_or_404(ArmourModel, id)
