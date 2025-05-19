@@ -19,18 +19,18 @@ class CharmRankSchema(SQLAlchemyAutoSchema):
     model = CharmRankModel
     include_fk = True
     load_instance = True
-    #exclude = ('id',)
+    exclude = ('id',)
 
-  #charm_id = auto_field()
+  charm_id = auto_field()
   name = auto_field()
-  #desc = fields.String(data_key='description')
-  desc = auto_field()
+  desc = fields.String(data_key='description')
+  #desc = auto_field()
   level = auto_field()
   rarity = auto_field()
   skills = Nested('SkillRankSchema', many=True)
 
-  # @post_dump
-  # def format_charm_id(self, data, **kwargs):
-  #   if 'charm_id' in data:
-  #     data['charm_id'] = {"id": data['charm_id']}
-  #   return data
+  @post_dump
+  def format_charm_id(self, data, **kwargs):
+    if 'charm_id' in data:
+      data['charm_id'] = {"id": data['charm_id']}
+    return data

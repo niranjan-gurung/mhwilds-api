@@ -11,8 +11,8 @@ class SkillSchema(SQLAlchemyAutoSchema):
 
   name = auto_field()
   type = auto_field()
-  #desc = fields.String(data_key='description')
-  desc = auto_field()
+  desc = fields.String(data_key='description')
+  #desc = auto_field()
   ranks = Nested('SkillRankSchema', many=True)
 
 class SkillRankSchema(SQLAlchemyAutoSchema):
@@ -21,20 +21,20 @@ class SkillRankSchema(SQLAlchemyAutoSchema):
     include_fk = True
     load_instance = True
   
-  #skill = fields.String(attribute='skill.name')
+  skill = fields.String(attribute='skill.name')
   id = auto_field()
   level = auto_field()
   skill_id = auto_field()
-  #desc = fields.String(data_key='description')
-  desc = auto_field()
-  skill_name = fields.String(attribute='skill.name')
+  desc = fields.String(data_key='description')
+  #desc = auto_field()
+  #skill_name = fields.String(attribute='skill.name')
 
-  # @post_dump
-  # def format_charm_id(self, data, **kwargs):
-  #   if 'skill_id' in data:
-  #     data['skill'] = {
-  #       "id": data['skill_id'],
-  #       "name": data['skill']
-  #     }
-  #     del data['skill_id']
-  #   return data
+  @post_dump
+  def format_charm_id(self, data, **kwargs):
+    if 'skill_id' in data:
+      data['skill'] = {
+        "id": data['skill_id'],
+        "name": data['skill']
+      }
+      del data['skill_id']
+    return data
